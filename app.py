@@ -4,11 +4,11 @@ from pypdf import PdfReader
 from gtts import gTTS
 import io
 
-# 1. جلب مفتاح Groq بأمان من ملف الأسرار المخفي st.secrets
+# 1. جلب مفتاح Groq بأمان من ملف الأسرار (يعمل محلياً أو سحابياً على الاستضافة)
 try:
     GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 except Exception:
-    st.error("🔒 خطأ: لم يتم العثور على مفتاح Groq الآمن. تأكد من إضافته في ملف .streamlit/secrets.toml")
+    st.error("🔒 خطأ: لم يتم العثور على مفتاح Groq الآمن. تأكد من إضافته في Secrets على منصة الاستضافة أو في ملف .streamlit/secrets.toml محلياً.")
     st.stop()
 
 # إعداد عميل Groq للاتصال بالسيرفرات الصاروخية
@@ -17,7 +17,7 @@ client = Groq(api_key=GROQ_API_KEY)
 # 2. إعدادات واجهة التطبيق لتكون متناسقة ومريحة للعين
 st.set_page_config(page_title="وكيل الأزهريين", page_icon="🕌", layout="centered")
 
-# التوجيهات النظامية الصارمة (System Instruction) لتوجيه عقلية الموديل الفرنسي المستقل Mixtral
+# التوجيهات النظامية الصارمة (System Instruction) لتوجيه نموذج GPT OSS 120B المستقل والخارق
 SYSTEM_PROMPT = """
 أنت الآن "وكيل الأزهريين" (Deputy of Al-Azhar)، خبير تعليمي ومدرس متمكن متخصص في مناهج ومواد الأزهر الشريف بالكامل.
 - مهمتك: مساعدة الطلاب والمعلمين بناءً على النصوص المرفوعة من كتب المعهد المرفقة.
@@ -27,17 +27,17 @@ SYSTEM_PROMPT = """
 """
 
 # دالة استدعاء الموديل المستقل عبر Groq وسحب الإجابة في أجزاء من الثانية
-def get_groq_answer(user_query, text_context, user_mode, model_name="mixtral-8x7b-32768"):
+def get_groq_answer(user_query, text_context, user_mode, model_name="gpt-oss-120b"):
     # دمج وضع الحساب، السياق، والسؤال في نص واحد منظم يذهب للموديل
     full_user_message = f"[بوابة الاستخدام الحالية: {user_mode}]\n\nنص كتاب المعهد المرفوع:\n{text_context}\n\nطلب المستخدم وسؤاله:\n{user_query}"
     
     completion = client.chat.completions.create(
-        model=model_name, # نموذج Mixtral الذكي والمستقل تماماً عن Meta
+        model=model_name, # استخدام النموذج المستقل والذكي المتواجد في حسابك
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": full_user_message}
         ],
-        temperature=0.4, # حرارة منخفضة لضمان الالتزام بالنص الفقهي والعلمي وعدم التأليف
+        temperature=0.4, # حرارة منخفضة لضمان الالتزام بالنص الفقهي والعلمي وعدم التأليف والهلوسة
     )
     return completion.choices[0].message.content
 
@@ -71,7 +71,7 @@ def text_to_speech_player(text_to_speak):
 # العنوان الرئيسي الأنيق
 st.markdown("<h1 style='text-align: center; color: #1e4620;'>🕌 وكيل الأزهريين الذكي</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #555; font-weight: bold;'>Deputy of Al-Azhar</p>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #777;'>مبادرة خيرية لخدمة طلاب ومدرسي الأزهر الشريف عبر الذكاء الاصطناعي المستقل</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #777;'>مبادرة خيرية لخدمة طلاب ومدرسي الأزهر الشريف عبر نموذج التفكير المنطقي GPT OSS 120B</p>", unsafe_allow_html=True)
 st.write("---")
 
 # القائمة الجانبية لتحديد الحساب وضمان الأمان
@@ -79,13 +79,13 @@ with st.sidebar:
     st.markdown("<h3 style='text-align: center; color: #1e4620;'>🔐 بوابة التحكم</h3>", unsafe_allow_html=True)
     user_mode = st.selectbox("اختر نوع الحساب للدخول:", ["👤 بوابة الطالب الأزهري", "👨‍🏫 بوابة معلم أزهري"])
     st.write("---")
-    st.success("الوكيل متصل بنموذج خادم Mixtral الحر 🔓")
+    st.success("الوكيل متصل بنموذج GPT OSS 120B المفتوح 🔓")
 
 # صندوق رفع ملف كتاب المعهد (PDF)
 uploaded_file = st.file_uploader("ارفع كتاب المعهد، المذكرة الرسمية، أو منهج المادة (PDF):", type=["pdf"])
 
 if uploaded_file is not None:
-    with st.spinner("📄 جاري قراءة وتحليل صفحات كتاب المعهد بدقة..."):
+    with st.spinner("📄 jاري قراءة وتحليل صفحات كتاب المعهد بدقة..."):
         book_context = extract_text_from_pdf(uploaded_file)
     st.toast("تمت قراءة الكتاب وحفظ سياق المادة بنجاح! 🎉")
 else:
@@ -162,3 +162,4 @@ elif user_mode == "👨‍🏫 بوابة معلم أزهري":
                     text_to_speech_player(reply)
             else:
                 st.warning("رجاءً ارفع ملف المنهج أولاً لصياغة الاختبار منه.")
+    
